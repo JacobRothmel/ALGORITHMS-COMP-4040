@@ -102,3 +102,6 @@ ENV/
 
 #data files
 *.dat
+
+#test files
+t.py
