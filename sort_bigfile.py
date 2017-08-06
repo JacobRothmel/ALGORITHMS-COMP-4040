@@ -22,44 +22,51 @@ Contains:
 ----------
 CHANGE LOG
 ----------
-    -07-15-17 - Started
-    -08-04-17 - Moved all file classes to FileMonsters.py and all sorts to 
+    -07/15/17 - Started
+    -08/04/17 - Moved all file classes to FileMonsters.py and all sorts to
                     Sorts.py. Also improved qsort_inplace() with a wrapper function.
                     Renamed this file to sort_bigfile.py.
+    -08/06/17 - Finished main
 """
 import argparse
+import logging
 import sys
 import os
+
+from Sorts import ExternSort
+
+"""
+Logging
+-------
+"""
+#This logger will pick up log messages from the TabUndocumentedAPI class
+LOG_FILENAME = 'sort.log'
+logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(levelname)s - %(asctime)s - %(message)s')
+
 
 """
 MAIN
 -----
 """
-def test(lst):
-    qsort_inplace(lst, 0, len(lst) - 1)
-    return lst
-
 def main(args):
-    print('NOT READY TO WORK ON THIS PART YET, JUST A PLACE HOLDER')
+    """
+    This main function serves as a way to use the external sort from the command
+    line.
 
-    x = [35,200,97,56,103,146,87,512,96,55,33,44,12,1]
+    args:
+        args (dict): incoming command line arguments
 
-    ha = test(x)
-    print(ha)
+    return:
+        -N/A
+    """
+    #set up the external sort
+    externalSorter = ExternSort(args.filename, args.sizePerChunk)
 
-    print(x)
-    qsort_inplace(x, 0, len(x) - 1)
-    print(x)
+    #run the external sort
+    externalSorter.run_extern_sort()
+    
+    logging.info('{0}'.format(externalSorter.get_timeing_info()))
 
-
-    i = 0
-    with open('data.dat', 'r') as f:
-        for chunk in iter(lambda: f.readline(), ""):
-            print('\n\n\n CHUNK {0}:\n{1}\nType: {2}'.format(i, chunk, type(chunk)))
-            i += 1
-
-            if i == 10:
-                return
 
 if __name__ == '__main__':
     #argparse setup
@@ -79,7 +86,7 @@ if __name__ == '__main__':
                                     dest='sizePerChunk',
                                     action='store',
                                     type=int,
-                                    default=1024,
+                                    default=209715200,
                                     help='Size to make each chun in bytes.')
 
 

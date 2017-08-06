@@ -18,27 +18,35 @@ Classes:
 
     -AmmoRack()
         -__init__(self, files)
-        -make_war_plans(self)
-        -reload(self)
-        -unload(self, index)
+        +make_war_plans(self)
+        +reload(self)
+        +unload(self, index)
+
+    -FileSurgeon()
+        +__init__(self, sPlan)
+        +start_stitching(self, patients, targetFileName, chunkSize)
+        +prep_for_surgery(self, patients, chunkSize)
+
+    -FileSuture()
+        +pick_target(self, thread)
 
 Helper Function(s):
     -_murder_file(file)
 
 Global(s):
     -_workingDir: The current working directory
-    
+
 ----------
 CHANGE LOG
 ----------
-    -08-04-17 - Started. Moved all file manipulation code to this file. added in code to merge
-                    chunk files back together and a filepicker for nway merging. 
+    -08/04/17 - Started. Moved all file manipulation code to this file. added in code to merge
+                    chunk files back together and a filepicker for nway merging.
+    -08/05/17 - Formatting fixes and documentation added.
 """
 import sys
 import os
 
-from sorts import qsort_inplace
-
+import Sorts
 """
 Globals
 -----
@@ -98,12 +106,12 @@ class FileMutilator():
         return:
             -N/A
         """
-        map(_murder_file, self.chunkFiles)
+        map(_murder_file, self._chunkFiles)
 
     def commit_mutilation(self):
         """
         This method splits the victim file into 'self.chunkSize' long chunk files
-        where each chunk was quick sorted in-place befoer being written to a file and the name
+        where each chunk was quick sorted in-place before being written to a file and the name
         of that file recorded.
 
         args:
@@ -115,9 +123,9 @@ class FileMutilator():
         #keep track of the current chunk being created
         chunkNum = 0
         with open(self.victim) as fileHandle:
-            while true:
+            while True:
                 #use readlines so we get a list of lines that can be sorted.
-                chunk = fileHandle.readlines(self.chunk)
+                chunk = fileHandle.readlines(self.chunkSize)
 
                 #if the chunk is empty we are @ EOF; so break
                 if not chunk:
@@ -151,13 +159,13 @@ class FileMutilator():
         self._chunkFiles.append(chunkName)
 
         #save some time and do the quicksort now while values already in memory
-        qsort_inplace(chunk, 0, len(chunk) - 1)
+        Sorts.qsort_inplace(chunk, 0, len(chunk) - 1)
 
         #turn the chunk lines into a string we can write
         toWrite = ''.join(chunk)
 
         #write the chunk to file
-        with open(chunkName, 'r') as fileHandle:
+        with open(chunkName, 'w') as fileHandle:
             try:
                 fileHandle.write(toWrite)
             except Exception as e:
@@ -220,7 +228,7 @@ class AmmoRack(object):
             #check for EOF and already seen
             if self.blanks[i] is None and i not in self.spent:
                 #reload a blank
-                self.blanks[i] = self.files[i].readline()
+                self.blanks[i] = self.rounds[i].readline()
 
                 #if the black reload failed, record that that one is out of ammo
                 if self.blanks[i] == '':
@@ -287,31 +295,30 @@ class FileSurgeon(object):
 
         return waitingRoom
 
-    def start_cutting(self, patients, targetFileName, chunkSize):
+    def start_stitching(self, patients, targetFileName, chunkSize):
         """
         This method actually does the file merge.
 
         args:
             -patients (list of strings): the files
-            -targetFileName (list of strings): the name for the outfile
+            -targetFileName (string): the name for the outfile
             -chunkSize (int): max size of files in bytes
 
         return:
             -N/A
         """
-        #open the target file
-        targetFile = open(targetFileName, 'w', chunkSize)
-
         #prepare for battle
         ammo = AmmoRack(self.prep_for_surgery(patients, chunkSize))
 
-        #WAR
-        while ammo.reload():
-            #get target
-            selectedTarget = self.sugery_plan.pick_target(ammo.make_war_plans())
+        #open the target file
+        with open(targetFileName, 'w', chunkSize) as targetFile:
+            #WAR
+            while ammo.reload():
+                #get target
+                selectedTarget = self.sugery_plan.pick_target(ammo.make_war_plans())
 
-            #bombs away
-            targetFile.write(ammo.unload(selectedTarget))
+                #bombs away
+                targetFile.write(ammo.unload(selectedTarget))
 
 
 """
